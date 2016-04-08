@@ -7,6 +7,6 @@ setup(name='simpleply',
       url='http://github.com/dave3d/simpleply',
       author='Dave Chen',
       author_email='dchen@mail.nih.gov',
-      license='MIT',
+      license='Apache 2.0',
       packages=['simpleply'],
       zip_safe=False)
