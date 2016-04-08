@@ -1,6 +1,10 @@
 # simpleply
 A python module for simplified ASCII PLY files
 
+Written by David T. Chen from the National Library of Medicine, dchen@mail.nih.gov It is covered by the Apache License, Version 2.0:
+
+http://www.apache.org/licenses/LICENSE-2.0
+
 Simple PLY module
 =================
 A module that contains a data structure for a simplified PLY mesh.  The PLY
