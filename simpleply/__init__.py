@@ -5,9 +5,9 @@
 Dave Chen's simple PLY module
 
 This module supports a simplified PLY mesh.  It does not support the completely
-general PLY format.  In particular, vertices only have position, color and texture coordinates,
-and edges and faces only have vertex indices.  Other elements and properties possible
-in more complex PLY files are ignored.
+general PLY format.  In particular, vertices only have position, normal, color and texture
+coordinates, and edges and faces only have vertex indices.  Other elements and properties
+possible in more complex PLY files are ignored.
 
 Also it only reads and writes ASCII PLY files.  Reading and writing of binary PLY
 files might be supported in the future.
@@ -27,6 +27,7 @@ Debug = False
 class PlyVertex:
     def __init__(self, pos=[0.0,0.0,0.0]):
         self.pos = pos
+        self.norm = [0.0, 0.0, 0.0]
         self.tex = [0.0, 0.0]
         self.color = [1.0, 1.0, 1.0, 1.0]
 
@@ -39,10 +40,19 @@ class PlyVertex:
         self.color[1] = g
         self.color[2] = b
 
+    def setNormal(self, nx, ny, nz):
+        self.norm[0] = nx
+        self.norm[1] = ny
+        self.norm[2] = nz
+
     def getTexture(self):
         return self.tex
     def getColor(self):
         return self.color
+    def getNormal(self):
+        return self.norm
+    def getPosition(self):
+        return self.pos
 
     def __str__(self):
         return str(self.pos[0]) + " " + str(self.pos[1]) + " " + str(self.pos[2])
@@ -81,6 +91,7 @@ class PlyMesh:
     def __init__(self):
         self.textureFlag = False
         self.vertexColorFlag = False
+        self.vertexNormalFlag = False
         #self.faceColorFlag = False
         self.vertices = []
         self.edges = []
@@ -131,10 +142,21 @@ class PlyMesh:
     def write(self, name):
         """ Write an ASCII PLY file. """
         fp = open(name, "w")
-        plyheader.plyheader(len(self.vertices), len(self.faces), self.vertexColorFlag, self.textureFlag, fp)
+        plyheader.plyheader(len(self.vertices), len(self.edges), len(self.faces), self.vertexColorFlag,
+            self.vertexNormalFlag, self.textureFlag, fp)
 
         for v in self.vertices:
-            print(v, file=fp)
+            print(v, end="", file=fp)
+            if self.vertexColorFlag:
+                print("", v.color[0], v.color[1], v.color[2], end="", file=fp)
+            if self.vertexNormalFlag:
+                print("", v.norm[0], v.norm[1], v.norm[2], end="", file=fp)
+            if self.textureFlag:
+                print("", v.tex[0], v.tex[1], end="", file=fp)
+            print( "", file=fp )
+
+        for e in self.edges:
+            print(e, file=fp)
 
         for f in self.faces:
             print( len(f.vertices), end="", file=fp )
@@ -147,18 +169,17 @@ class PlyMesh:
             It only handles a position, color and texture coordinates.  Other properties
             are ignored.
         """
+        # read file
         with open (name) as f:
             lines = f.read().splitlines()
+        # setup variables
         end_head_found = False
         header = []
-        lc = 0
-        elempos = 0
-        vcpos = -1
-        vtpos = -1
+        lc = elempos = current_elem_type = 0
+        vcpos = vtpos = vnpos = -1
         xpos = 0
         ypos = 1
         zpos = 2
-        current_elem_type = 0
         nums = []
         elements = []
         self.__init__()
@@ -190,21 +211,26 @@ class PlyMesh:
                     nums.append( int(words[2]) )
                     elements.append(3)
             # property statement
-            if l.find("property") > 0:
+            if l.find("property") >= 0:
                 words = l.split()
                 if current_elem_type == 1:
                     # red channel
                     if (words[2] == "r") or (words[2] == "red"):
                        vcpos = elempos
+                       self.vertexColorFlag = True
                     # first texture coordinate
                     if words[2] == "u":
                        vtpos = elempos
+                       self.textureFlag = True
                     if words[2] == "x":
                        xpos = elempos
                     if words[2] == "y":
                        ypos = elempos
                     if words[2] == "z":
                        zpos = elempos
+                    if (words[2] == "nx"):
+                       vnpos = elempos
+                       self.vertexNormalFlag = True
                 elempos = elempos+1
 
 
@@ -233,6 +259,8 @@ class PlyMesh:
                 vert = PlyVertex( [float(words[xpos]), float(words[ypos]), float(words[zpos])] )
                 if vcpos > 0:
                     vert.setColor( float(words[vcpos]), float(words[vcpos+1]), float(words[vcpos+2]) )
+                if vnpos > 0:
+                    vert.setNormal( float(words[vnpos]), float(words[vnpos+1]), float(words[vnpos+2]) )
                 if vtpos > 0:
                     vert.setTexture( float(words[vtpos]), float(words[vtpos+1]) )
                 self.vertices[count] = vert
@@ -266,10 +294,10 @@ class PlyMesh:
         if Debug:
             print(self)
 
-    def readPly(name):
-        mesh = PlyMesh()
-        mesh.read(name)
-        return mesh
+def readPly(name):
+    mesh = PlyMesh()
+    mesh.read(name)
+    return mesh
 
 if __name__ == "__main__":
     print( "Simple Ply test" )
