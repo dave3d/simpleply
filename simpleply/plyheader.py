@@ -4,8 +4,10 @@ from __future__ import print_function
 
 import sys
 
+class ColorType:
+    no_color, uchar_color, float_color = range(3)
 
-def plyheader(nverts, nedges, nfaces, vcolorFlag=False, vnormFlag=False, tcoordFlag=False, fout=sys.stdout):
+def plyheader(nverts, nedges, nfaces, vcolorType=ColorType.no_color, vnormFlag=False, tcoordFlag=False, fout=sys.stdout):
 
     print ("ply", file=fout)
     print ("format ascii 1.0", file=fout)
@@ -16,10 +18,14 @@ def plyheader(nverts, nedges, nfaces, vcolorFlag=False, vnormFlag=False, tcoordF
         print ("property float y", file=fout)
         print ("property float z", file=fout)
 
-        if vcolorFlag:
+        if vcolorType == ColoType.uchar_color:
             print ("property uchar red", file=fout)
             print ("property uchar green", file=fout)
             print ("property uchar blue", file=fout)
+        elif vcolorType == ColoType.float_color:
+            print ("property float red", file=fout)
+            print ("property float green", file=fout)
+            print ("property float blue", file=fout)
 
         if vnormFlag:
             print ("property float nx", file=fout)

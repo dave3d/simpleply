@@ -18,10 +18,14 @@ For a completely general PLY file, see the plyfile module:
 
 from __future__ import print_function
 import sys, inspect
-import plyheader
+from plyheader import *
 
 
 Debug = False
+
+#
+class ElementType:
+    non_element, vertex, edge, face = range(4)
 
 #
 class PlyVertex:
@@ -59,9 +63,6 @@ class PlyVertex:
 
 #
 class PlyEdge:
-    def __init__(self):
-        self.ends = [0, 0]
-
     def __init__(self, e0, e1):
         self.ends = [e0, e1]
 
@@ -90,9 +91,8 @@ class PlyFace:
 class PlyMesh:
     def __init__(self):
         self.textureFlag = False
-        self.vertexColorFlag = False
         self.vertexNormalFlag = False
-        #self.faceColorFlag = False
+        self.colorType = ColorType.no_color
         self.vertices = []
         self.edges = []
         self.faces = []
@@ -142,12 +142,12 @@ class PlyMesh:
     def write(self, name):
         """ Write an ASCII PLY file. """
         fp = open(name, "w")
-        plyheader.plyheader(len(self.vertices), len(self.edges), len(self.faces), self.vertexColorFlag,
+        plyheader(len(self.vertices), len(self.edges), len(self.faces), self.colorType,
             self.vertexNormalFlag, self.textureFlag, fp)
 
         for v in self.vertices:
             print(v, end="", file=fp)
-            if self.vertexColorFlag:
+            if self.colorType != ColorType.no_color:
                 print("", v.color[0], v.color[1], v.color[2], end="", file=fp)
             if self.vertexNormalFlag:
                 print("", v.norm[0], v.norm[1], v.norm[2], end="", file=fp)
@@ -165,7 +165,7 @@ class PlyMesh:
             print( "", file=fp )
 
     def read(self, name):
-        """ Read an ASCII PLY file.this is not a completely general PLY file reader.
+        """ Read an ASCII PLY file.  This is not a completely general PLY file reader.
             It only handles a position, color and texture coordinates.  Other properties
             are ignored.
         """
@@ -177,9 +177,7 @@ class PlyMesh:
         header = []
         lc = elempos = current_elem_type = 0
         vcpos = vtpos = vnpos = -1
-        xpos = 0
-        ypos = 1
-        zpos = 2
+        xpos, ypos, zpos = range(3)
         nums = []
         elements = []
         self.__init__()
@@ -199,17 +197,17 @@ class PlyMesh:
                 words = l.split()
                 elempos = 0
                 if l.find("vertex") > 0:
-                    current_elem_type = 1
+                    current_elem_type = ElementType.vertex
                     nums.append( int(words[2]) )
-                    elements.append(1)
+                    elements.append(ElementType.vertex)
                 if l.find("edge") > 0:
-                    current_elem_type = 2
+                    current_elem_type = ElementType.edge
                     nums.append( int(words[2]) )
-                    elements.append(2)
+                    elements.append(ElementType.edge)
                 if l.find("face") > 0:
-                    current_elem_type = 3
+                    current_elem_type =  ElementType.face
                     nums.append( int(words[2]) )
-                    elements.append(3)
+                    elements.append(ElementType.face)
             # property statement
             if l.find("property") >= 0:
                 words = l.split()
@@ -217,7 +215,10 @@ class PlyMesh:
                     # red channel
                     if (words[2] == "r") or (words[2] == "red"):
                        vcpos = elempos
-                       self.vertexColorFlag = True
+                       if l.find("float") > 0:
+                           self.colorType = ColorType.float_color
+                       if (l.find("uchar") > 0) or (l.find("uint8") > 0):
+                           self.colorType = ColorType.uchar_color
                     # first texture coordinate
                     if words[2] == "u":
                        vtpos = elempos
@@ -249,7 +250,7 @@ class PlyMesh:
         # get vertices
         epos = -1
         try:
-            epos = elements.index(1)
+            epos = elements.index(ElementType.vertex)
             self.vertices = [None] * nums[epos]
 
             count = 0
@@ -272,7 +273,7 @@ class PlyMesh:
         # get faces
         epos = -1
         try:
-            epos = elements.index(3)
+            epos = elements.index(ElementType.face)
             self.faces = [None] * nums[epos]
             count = 0
             for f in range(starts[epos], ends[epos]+1):
