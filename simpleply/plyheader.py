@@ -18,11 +18,11 @@ def plyheader(nverts, nedges, nfaces, vcolorType=ColorType.no_color, vnormFlag=F
         print ("property float y", file=fout)
         print ("property float z", file=fout)
 
-        if vcolorType == ColoType.uchar_color:
+        if vcolorType == ColorType.uchar_color:
             print ("property uchar red", file=fout)
             print ("property uchar green", file=fout)
             print ("property uchar blue", file=fout)
-        elif vcolorType == ColoType.float_color:
+        elif vcolorType == ColorType.float_color:
             print ("property float red", file=fout)
             print ("property float green", file=fout)
             print ("property float blue", file=fout)
