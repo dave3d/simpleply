@@ -8,6 +8,7 @@ class ColorType:
     no_color, uchar_color, float_color = range(3)
 
 def plyheader(nverts, nedges, nfaces, vcolorType=ColorType.no_color, vnormFlag=False, tcoordFlag=False, fout=sys.stdout):
+    """A function write out an ASCII PLY file header"""
 
     print ("ply", file=fout)
     print ("format ascii 1.0", file=fout)
