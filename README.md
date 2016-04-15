@@ -26,12 +26,13 @@ Also it is limited in what elements and properties it recognizes.  In the genera
 file format, the elements can be arbitrary, not just vertices, edges and faces.
 And each element could have an arbitrary number and types of properties.
 
-The simplified version of PLY supported here only allows vertex, edge and face
-elements.  The vertex element only allows for "x", "y", "z", "r", "g", "b",
-"red", "green", "blue", "u", and "v" properties.  Edges can only have two
-vertex index properties.  Faces can only have a list of vertex index property.
+Our simplified version of PLY supported here only allows vertex, edge and face
+elements.  The vertex element only allows for "x", "y", "z", "nx", "ny", "nz",
+"r", "g", "b", "red", "green", "blue", "u", and "v" properties.  Edges can only
+have two vertex index properties.  Faces can only have a list of vertex index
+property.
 
-While these restrictions may seem limiting, in my experience they allow for
+While these restrictions may seem limiting, in our experience they allow for
 the vast majority of PLY files in typical usage.
 
 A more general PLY module
